@@ -1,0 +1,51 @@
+# 环境变量和密钥
+.env
+.env.*
+!.env.example
+
+# Python 虚拟环境
+.venv/
+venv/
+env/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+
+# 日志
+logs/
+*.log
+
+# 本地数据库和向量库
+chroma_db/
+data/chromadb/
+*.db
+*.sqlite
+*.sqlite3
+
+# 用户上传文件
+data/uploads/
+data/private/
+
+# 本地模型
+models/
+*.safetensors
+*.pt
+*.pth
+*.onnx
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+
+# 操作系统
+.DS_Store
+Thumbs.db
