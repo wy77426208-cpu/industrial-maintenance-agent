@@ -1,0 +1,6 @@
+# Agent 主提示词
+main_prompt: prompts/main_prompt.txt
+
+# RAG 知识库问答提示词
+rag_summary_prompt: prompts/rag_summary_prompt.txt
+
