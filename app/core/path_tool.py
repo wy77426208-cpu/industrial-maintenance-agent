@@ -12,6 +12,9 @@ STORAGE_DIR = PROJECT_ROOT / "storage"
 CHROMA_DIR = STORAGE_DIR / "chroma"
 UPLOAD_DIR = STORAGE_DIR / "uploads"
 
+MD5_STORE_FILE = STORAGE_DIR / "md5_store.json"
+ENV_FILE = PROJECT_ROOT / ".env"
+
 LOG_DIR = PROJECT_ROOT / "logs"
 
 def create_runtime_directories():

@@ -34,7 +34,7 @@ def resolve_file_path(file_path: str | Path) -> Path:
 
 async def get_file_md5_hex(file_path: str | Path) -> str:
     """
-    异步计算文件 MD5。
+    异步计算文件 MD5。 
     :param file_path: 文件路径
     :return: MD5 十六进制字符串；失败时返回空字符串
     """
