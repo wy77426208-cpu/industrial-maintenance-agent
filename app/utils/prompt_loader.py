@@ -45,3 +45,5 @@ def load_prompt(prompt_type: str = "main_prompt") -> str:
         )
 
         raise
+
+

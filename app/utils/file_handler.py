@@ -200,9 +200,9 @@ async def pdf_loader(
 
             return docs
 
-        # ----------------------------------------------------
+
         # 第一种方式：UnstructuredPDFLoader
-        # ----------------------------------------------------
+
         try:
             loader = UnstructuredPDFLoader(
                 str(abs_file_path)
@@ -229,9 +229,7 @@ async def pdf_loader(
                 exc,
             )
 
-        # ----------------------------------------------------
         # 第二种方式：PyPDFLoader 兜底
-        # ----------------------------------------------------
         loader = PyPDFLoader(str(abs_file_path))
 
         docs = await asyncio.to_thread(loader.load)
