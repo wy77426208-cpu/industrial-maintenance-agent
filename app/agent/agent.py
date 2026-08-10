@@ -59,45 +59,73 @@ class MaintAIAgent:
         )
 
     @staticmethod
-    def _build_input(query: str) -> dict:
-        """将用户问题转换为 Agent 消息格式。"""
+    def _build_input(
+        query: str,
+        history: list[dict] | None = None,
+    ) -> dict:
+        """构造包含历史上下文的 Agent 消息。"""
+
+        messages = list(history or [])
+
+        messages.append(
+            {
+                "role": "user",
+                "content": query,
+            }
+        )
 
         return {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": query,
-                }
-            ]
+            "messages": messages,
         }
 
     def invoke(
         self,
         query: str,
+        history: list[dict] | None = None,
     ) -> str:
         """一次性执行 Agent 并返回最终回答。"""
 
         result = self.agent.invoke(
-            self._build_input(query)
+            self._build_input(
+                query,
+                history,
+            )
         )
 
-        return result["messages"][-1].content
+        return result[
+            "messages"
+        ][-1].content
 
+    
     def stream(
         self,
         query: str,
+        history: list[dict] | None = None,
     ) -> Iterator[str]:
         """流式执行 Agent。"""
 
         for chunk in self.agent.stream(
-            self._build_input(query),
+            self._build_input(
+                query,
+                history,
+            ),
             stream_mode="values",
         ):
-            latest_message = chunk["messages"][-1]
+            latest_message = chunk[
+                "messages"
+            ][-1]
 
-            if isinstance(latest_message, AIMessage) and latest_message.content:
+            if (
+                isinstance(
+                    latest_message,
+                    AIMessage,
+                )
+                and latest_message.content
+            ):
                 yield (
-                    str(latest_message.content).strip()
+                    str(
+                        latest_message.content
+                    ).strip()
                     + "\n"
                 )
 
