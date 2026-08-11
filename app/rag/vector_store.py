@@ -2,6 +2,7 @@ from pathlib import Path
 
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 from app.core.config import CHROMA_CONFIG
 from app.core.path_tool import CHROMA_DIR, DATA_DIR
@@ -9,6 +10,7 @@ from app.model.factory import embed_model
 from app.rag.document_processor import DocumentProcessor
 from app.rag.md5_store import MD5Store
 from app.utils.file_handler import listdir_allowed_type
+from app.core.logger_handler import logger
 
 
 class VectorStoreService:
@@ -87,6 +89,45 @@ class VectorStoreService:
             result[file_path.name] = chunk_count
 
         return result
+
+    def get_all_documents(
+        self,
+    ) -> list[Document]:
+        """获取向量库中的全部文档切片。"""
+
+        result = self.vector_store.get(
+            include=[
+                "documents",
+                "metadatas",
+            ]
+        )
+
+        texts = result.get(
+            "documents"
+        ) or []
+
+        metadatas = result.get(
+            "metadatas"
+        ) or []
+
+        documents = [
+            Document(
+                page_content=text,
+                metadata=metadata or {},
+            )
+            for text, metadata in zip(
+                texts,
+                metadatas,
+            )
+            if text
+        ]
+
+        logger.info(
+            "【VectorStore】读取 %d 个文档切片",
+            len(documents),
+        )
+
+        return documents
 
 if __name__ == "__main__":
     import asyncio

@@ -2,6 +2,7 @@ collection_name: agent
 
 # 检索配置
 candidate_k: 20
+bm25_k: 20
 rerank_k: 5
 
 # Rerank 模型
