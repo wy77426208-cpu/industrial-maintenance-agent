@@ -31,9 +31,7 @@ class KnowledgeService:
         )
 
         # 校验文件类型
-        allowed_types = set(
-            CHROMA_CONFIG["allowed_file_types"]
-        )
+        allowed_types = set(CHROMA_CONFIG["allowed_file_types"])
 
         if suffix not in allowed_types:
             logger.warning(
@@ -42,9 +40,7 @@ class KnowledgeService:
                 safe_name,
             )
 
-            raise ValueError(
-                f"不支持的文件类型：{suffix}"
-            )
+            raise ValueError(f"不支持的文件类型：{suffix}")
 
         # 防止空文件进入后续解析流程
         if not content:
@@ -53,9 +49,7 @@ class KnowledgeService:
                 safe_name,
             )
 
-            raise ValueError(
-                "上传文件不能为空"
-            )
+            raise ValueError("上传文件不能为空")
 
         # 确保上传目录存在
         UPLOAD_DIR.mkdir(
@@ -63,19 +57,12 @@ class KnowledgeService:
             exist_ok=True,
         )
 
-        target_path = (
-            UPLOAD_DIR / safe_name
-        )
+        target_path = UPLOAD_DIR / safe_name
 
         # 同名文件不直接覆盖原文件
         if target_path.exists():
-            target_path = (
-                UPLOAD_DIR
-                / (
-                    f"{target_path.stem}_"
-                    f"{uuid4().hex[:8]}"
-                    f"{target_path.suffix}"
-                )
+            target_path = UPLOAD_DIR / (
+                f"{target_path.stem}_" f"{uuid4().hex[:8]}" f"{target_path.suffix}"
             )
 
             logger.debug(
@@ -104,11 +91,7 @@ class KnowledgeService:
 
         # 交给已有 RAG 流程完成解析、切片和向量入库
         try:
-            chunk_count = (
-                await self.vector_store.add_file(
-                    target_path
-                )
-            )
+            chunk_count = await self.vector_store.add_file(target_path)
 
         except Exception:
             logger.exception(
@@ -117,9 +100,7 @@ class KnowledgeService:
             )
 
             # 入库失败时删除刚保存的文件
-            target_path.unlink(
-                missing_ok=True
-            )
+            target_path.unlink(missing_ok=True)
 
             raise
 
@@ -131,9 +112,7 @@ class KnowledgeService:
             )
 
             # 删除刚才保存的重复副本
-            target_path.unlink(
-                missing_ok=True
-            )
+            target_path.unlink(missing_ok=True)
 
             return {
                 "status": "duplicate",

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 # 项目根目录
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -16,6 +15,7 @@ MD5_STORE_FILE = STORAGE_DIR / "md5_store.json"
 ENV_FILE = PROJECT_ROOT / ".env"
 
 LOG_DIR = PROJECT_ROOT / "logs"
+
 
 def create_runtime_directories():
     """创建程序运行时需要的目录。"""

@@ -24,9 +24,7 @@ class MD5Store:
             return {}
 
         try:
-            content = self.store_path.read_text(
-                encoding="utf-8"
-            )
+            content = self.store_path.read_text(encoding="utf-8")
 
             if not content.strip():
                 return {}
@@ -57,9 +55,7 @@ class MD5Store:
         records[md5_hex] = {
             "filename": filename,
             "source": source,
-            "created_at": datetime.now().isoformat(
-                timespec="seconds"
-            ),
+            "created_at": datetime.now().isoformat(timespec="seconds"),
         }
 
         try:

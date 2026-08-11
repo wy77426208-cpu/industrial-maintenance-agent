@@ -1,8 +1,5 @@
 import jieba
-
-from langchain_community.retrievers import (
-    BM25Retriever,
-)
+from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 
 from app.core.config import CHROMA_CONFIG
@@ -14,15 +11,9 @@ def tokenize_text(
 ) -> list[str]:
     """对检索文本进行中文分词。"""
 
-    tokens = jieba.lcut_for_search(
-        text.lower()
-    )
+    tokens = jieba.lcut_for_search(text.lower())
 
-    return [
-        token.strip()
-        for token in tokens
-        if token.strip()
-    ]
+    return [token.strip() for token in tokens if token.strip()]
 
 
 class BM25Service:
@@ -33,12 +24,8 @@ class BM25Service:
         documents: list[Document],
     ):
         self.documents = documents
-        self.top_k = CHROMA_CONFIG[
-            "bm25_k"
-        ]
-        self.retriever = (
-            self._build_retriever()
-        )
+        self.top_k = CHROMA_CONFIG["bm25_k"]
+        self.retriever = self._build_retriever()
 
     def _build_retriever(
         self,
@@ -48,11 +35,9 @@ class BM25Service:
         if not self.documents:
             return None
 
-        retriever = (
-            BM25Retriever.from_documents(
-                self.documents,
-                preprocess_func=tokenize_text,
-            )
+        retriever = BM25Retriever.from_documents(
+            self.documents,
+            preprocess_func=tokenize_text,
         )
 
         retriever.k = self.top_k
@@ -73,9 +58,7 @@ class BM25Service:
         if self.retriever is None:
             return []
 
-        documents = self.retriever.invoke(
-            query
-        )
+        documents = self.retriever.invoke(query)
 
         logger.info(
             "【BM25】检索完成，query=%s，返回 %d 个切片",
@@ -87,9 +70,7 @@ class BM25Service:
             documents,
             start=1,
         ):
-            metadata = (
-                document.metadata or {}
-            )
+            metadata = document.metadata or {}
 
             logger.info(
                 "【BM25】Top%d：文件=%s，页码=%s，切片=%s",

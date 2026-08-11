@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 
 from dotenv import load_dotenv
+from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_community.chat_models.tongyi import ChatTongyi
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from app.core.logger_handler import logger
 from app.core.path_tool import ENV_FILE
@@ -34,10 +34,7 @@ class DashScopeEmbeddingsWrapper(Embeddings):
         self.dashscope = dashscope
         self.model_name = model_name
 
-        self.dashscope.api_key = (
-            api_key
-            or os.getenv("ALIYUN_ACCESS_KEY_SECRET")
-        )
+        self.dashscope.api_key = api_key or os.getenv("ALIYUN_ACCESS_KEY_SECRET")
 
         if not self.dashscope.api_key:
             raise ValueError("未配置阿里云 DashScope API Key")
@@ -55,7 +52,7 @@ class DashScopeEmbeddingsWrapper(Embeddings):
         batch_size = 10
 
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
 
             response = self.dashscope.TextEmbedding.call(
                 model=self.model_name,
@@ -67,14 +64,9 @@ class DashScopeEmbeddingsWrapper(Embeddings):
                     "【Embedding】DashScope 调用失败：%s",
                     response.message,
                 )
-                raise RuntimeError(
-                    f"DashScope Embedding 调用失败：{response.message}"
-                )
+                raise RuntimeError(f"DashScope Embedding 调用失败：{response.message}")
 
-            results.extend(
-                item["embedding"]
-                for item in response.output["embeddings"]
-            )
+            results.extend(item["embedding"] for item in response.output["embeddings"])
 
         return results
 
@@ -94,9 +86,7 @@ class DashScopeEmbeddingsWrapper(Embeddings):
                 "【Embedding】DashScope 调用失败：%s",
                 response.message,
             )
-            raise RuntimeError(
-                f"DashScope Embedding 调用失败：{response.message}"
-            )
+            raise RuntimeError(f"DashScope Embedding 调用失败：{response.message}")
 
         return response.output["embeddings"][0]["embedding"]
 
@@ -116,10 +106,7 @@ class ChatModelFactory(BaseModelFactory):
 
     @lru_cache(maxsize=1)
     def generator(self) -> BaseChatModel:
-        llm_type = (
-            os.getenv("LLM_TYPE")
-            or "ALIYUN"
-        ).upper()
+        llm_type = (os.getenv("LLM_TYPE") or "ALIYUN").upper()
 
         if llm_type == "ALIYUN":
             model_name = os.getenv(
@@ -127,9 +114,7 @@ class ChatModelFactory(BaseModelFactory):
                 "qwen3-max",
             )
 
-            api_key = os.getenv(
-                "ALIYUN_ACCESS_KEY_SECRET"
-            )
+            api_key = os.getenv("ALIYUN_ACCESS_KEY_SECRET")
 
             if api_key:
                 os.environ["DASHSCOPE_API_KEY"] = api_key
@@ -158,27 +143,18 @@ class ChatModelFactory(BaseModelFactory):
             )
 
         if llm_type == "OPENAI":
-            model_name = os.getenv(
-                "OPENAI_MODEL_NAME"
-            )
+            model_name = os.getenv("OPENAI_MODEL_NAME")
 
             if not model_name:
-                raise ValueError(
-                    "未配置 OPENAI_MODEL_NAME"
-                )
+                raise ValueError("未配置 OPENAI_MODEL_NAME")
 
             return ChatOpenAI(
                 model=model_name,
                 api_key=os.getenv("OPENAI_API_KEY"),
-                base_url=(
-                    os.getenv("OPENAI_BASE_URL")
-                    or None
-                ),
+                base_url=(os.getenv("OPENAI_BASE_URL") or None),
             )
 
-        raise ValueError(
-            f"不支持的聊天模型类型：{llm_type}"
-        )
+        raise ValueError(f"不支持的聊天模型类型：{llm_type}")
 
 
 class EmbedModelFactory(BaseModelFactory):
@@ -187,9 +163,7 @@ class EmbedModelFactory(BaseModelFactory):
     @lru_cache(maxsize=1)
     def generator(self) -> Embeddings:
         embed_type = (
-            os.getenv("EMBED_MODEL_TYPE")
-            or os.getenv("LLM_TYPE")
-            or "ALIYUN"
+            os.getenv("EMBED_MODEL_TYPE") or os.getenv("LLM_TYPE") or "ALIYUN"
         ).upper()
 
         if embed_type == "ALIYUN":
@@ -198,9 +172,7 @@ class EmbedModelFactory(BaseModelFactory):
                     "ALIYUN_EMBED_MODEL_NAME",
                     "text-embedding-v4",
                 ),
-                api_key=os.getenv(
-                    "ALIYUN_ACCESS_KEY_SECRET"
-                ),
+                api_key=os.getenv("ALIYUN_ACCESS_KEY_SECRET"),
             )
 
         if embed_type == "OLLAMA":
@@ -216,22 +188,15 @@ class EmbedModelFactory(BaseModelFactory):
             )
 
         if embed_type == "OPENAI":
-            model_name = os.getenv(
-                "OPENAI_EMBED_MODEL_NAME"
-            )
+            model_name = os.getenv("OPENAI_EMBED_MODEL_NAME")
 
             if not model_name:
-                raise ValueError(
-                    "未配置 OPENAI_EMBED_MODEL_NAME"
-                )
+                raise ValueError("未配置 OPENAI_EMBED_MODEL_NAME")
 
             return OpenAIEmbeddings(
                 model=model_name,
                 api_key=os.getenv("OPENAI_API_KEY"),
-                base_url=(
-                    os.getenv("OPENAI_BASE_URL")
-                    or None
-                ),
+                base_url=(os.getenv("OPENAI_BASE_URL") or None),
             )
 
         if embed_type == "LOCAL":
@@ -251,9 +216,7 @@ class EmbedModelFactory(BaseModelFactory):
                 },
             )
 
-        raise ValueError(
-            f"不支持的 Embedding 模型类型：{embed_type}"
-        )
+        raise ValueError(f"不支持的 Embedding 模型类型：{embed_type}")
 
 
 class VisionModelFactory(BaseModelFactory):
@@ -262,9 +225,7 @@ class VisionModelFactory(BaseModelFactory):
     @lru_cache(maxsize=1)
     def generator(self) -> BaseChatModel:
         vision_type = (
-            os.getenv("VISION_MODEL_TYPE")
-            or os.getenv("LLM_TYPE")
-            or "ALIYUN"
+            os.getenv("VISION_MODEL_TYPE") or os.getenv("LLM_TYPE") or "ALIYUN"
         ).upper()
 
         if vision_type == "ALIYUN":
@@ -273,9 +234,7 @@ class VisionModelFactory(BaseModelFactory):
                 "qwen-vl-max",
             )
 
-            api_key = os.getenv(
-                "ALIYUN_ACCESS_KEY_SECRET"
-            )
+            api_key = os.getenv("ALIYUN_ACCESS_KEY_SECRET")
 
             if api_key:
                 os.environ["DASHSCOPE_API_KEY"] = api_key
@@ -303,28 +262,20 @@ class VisionModelFactory(BaseModelFactory):
             )
 
         if vision_type == "OPENAI":
-            model_name = os.getenv(
-                "OPENAI_VISION_MODEL_NAME"
-            )
+            model_name = os.getenv("OPENAI_VISION_MODEL_NAME")
 
             if not model_name:
-                raise ValueError(
-                    "未配置 OPENAI_VISION_MODEL_NAME"
-                )
+                raise ValueError("未配置 OPENAI_VISION_MODEL_NAME")
 
             return ChatOpenAI(
                 model=model_name,
                 api_key=os.getenv("OPENAI_API_KEY"),
-                base_url=(
-                    os.getenv("OPENAI_BASE_URL")
-                    or None
-                ),
+                base_url=(os.getenv("OPENAI_BASE_URL") or None),
                 streaming=False,
             )
 
-        raise ValueError(
-            f"不支持的视觉模型类型：{vision_type}"
-        )
+        raise ValueError(f"不支持的视觉模型类型：{vision_type}")
+
 
 # 只创建一个工厂实例，保证 generator() 的缓存能够复用。
 chat_model_factory = ChatModelFactory()

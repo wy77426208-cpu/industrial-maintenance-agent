@@ -36,12 +36,7 @@ class RagService:
 
     def _init_chain(self):
         """初始化 RAG 总结链。"""
-        return (
-            self.prompt_template
-            | log_prompt
-            | self.model
-            | StrOutputParser()
-        )
+        return self.prompt_template | log_prompt | self.model | StrOutputParser()
 
     def retrieve_docs(
         self,
@@ -109,19 +104,13 @@ class RagService:
             page_label = metadata.get("page_label")
             chunk_index = metadata.get("chunk_index")
 
-            source_info = [
-                f"文件：{filename}"
-            ]
+            source_info = [f"文件：{filename}"]
 
             if page_label is not None:
-                source_info.append(
-                    f"页码：{page_label}"
-                )
+                source_info.append(f"页码：{page_label}")
 
             if chunk_index is not None:
-                source_info.append(
-                    f"切片：{chunk_index}"
-                )
+                source_info.append(f"切片：{chunk_index}")
 
             context_parts.append(
                 f"【参考资料{index}】\n"

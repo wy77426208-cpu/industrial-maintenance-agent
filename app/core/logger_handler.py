@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+
 from app.core.path_tool import LOG_DIR, create_runtime_directories
 
 
@@ -30,10 +31,7 @@ def get_logger(
     # 文件日志
     log_file = LOG_DIR / f"{name}_{datetime.now():%Y%m%d}.log"
 
-    file_handler = logging.FileHandler(
-        log_file,
-        encoding="utf-8"
-    )
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(file_level)
     file_handler.setFormatter(formatter)
 
@@ -44,7 +42,6 @@ def get_logger(
 
 
 logger = get_logger()
-
 
 
 if __name__ == "__main__":

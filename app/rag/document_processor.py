@@ -44,9 +44,7 @@ class DocumentProcessor:
             ".pptx": ppt_loader,
         }
 
-        loader = loaders.get(
-            file_path.suffix.lower()
-        )
+        loader = loaders.get(file_path.suffix.lower())
 
         if loader is None:
             logger.warning(
@@ -75,19 +73,14 @@ class DocumentProcessor:
             )
             return 0
 
-        if (
-            abs_file_path.suffix.lower()
-            not in CHROMA_CONFIG["allowed_file_types"]
-        ):
+        if abs_file_path.suffix.lower() not in CHROMA_CONFIG["allowed_file_types"]:
             logger.warning(
                 "【文档处理】不允许的文件类型：%s",
                 abs_file_path.suffix,
             )
             return 0
 
-        md5_hex = await get_file_md5_hex(
-            abs_file_path
-        )
+        md5_hex = await get_file_md5_hex(abs_file_path)
 
         if not md5_hex:
             return 0
@@ -99,9 +92,7 @@ class DocumentProcessor:
             )
             return 0
 
-        documents = await self._load_documents(
-            abs_file_path
-        )
+        documents = await self._load_documents(abs_file_path)
 
         if not documents:
             logger.warning(

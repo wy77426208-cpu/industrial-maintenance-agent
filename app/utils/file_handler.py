@@ -3,16 +3,15 @@ import hashlib
 from pathlib import Path
 
 import aiofiles
-
-from langchain_core.documents import Document
 from langchain_community.document_loaders import (
+    Docx2txtLoader,
     PyPDFLoader,
     TextLoader,
-    UnstructuredPDFLoader,
     UnstructuredMarkdownLoader,
+    UnstructuredPDFLoader,
     UnstructuredPowerPointLoader,
-    Docx2txtLoader,
 )
+from langchain_core.documents import Document
 
 from app.core.logger_handler import logger
 from app.core.path_tool import PROJECT_ROOT
@@ -34,7 +33,7 @@ def resolve_file_path(file_path: str | Path) -> Path:
 
 async def get_file_md5_hex(file_path: str | Path) -> str:
     """
-    异步计算文件 MD5。 
+    异步计算文件 MD5。
     :param file_path: 文件路径
     :return: MD5 十六进制字符串；失败时返回空字符串
     """
@@ -111,6 +110,7 @@ def get_file_md5_hex_sync(file_path: str | Path) -> str:
         )
         return ""
 
+
 async def listdir_allowed_type(
     directory: str | Path,
     allowed_types: tuple[str, ...],
@@ -133,22 +133,17 @@ async def listdir_allowed_type(
 
     # 全部统一转小写，避免 .PDF、.Pdf 等情况漏掉。
     allowed_types = tuple(
-        suffix.lower()
-        if suffix.startswith(".")
-        else f".{suffix.lower()}"
+        suffix.lower() if suffix.startswith(".") else f".{suffix.lower()}"
         for suffix in allowed_types
     )
 
     try:
-        files = await asyncio.to_thread(
-            lambda: list(abs_directory.iterdir())
-        )
+        files = await asyncio.to_thread(lambda: list(abs_directory.iterdir()))
 
         result = tuple(
             file
             for file in files
-            if file.is_file()
-            and file.suffix.lower() in allowed_types
+            if file.is_file() and file.suffix.lower() in allowed_types
         )
 
         logger.debug(
@@ -165,6 +160,7 @@ async def listdir_allowed_type(
             abs_directory,
         )
         return ()
+
 
 async def pdf_loader(
     file_path: str | Path,
@@ -200,22 +196,16 @@ async def pdf_loader(
 
             return docs
 
-
         # 第一种方式：UnstructuredPDFLoader
 
         try:
-            loader = UnstructuredPDFLoader(
-                str(abs_file_path)
-            )
+            loader = UnstructuredPDFLoader(str(abs_file_path))
 
             docs = await asyncio.to_thread(loader.load)
 
             # 有 Document，并且至少一个 Document 有有效文本，
             # 才认为本次加载成功。
-            if docs and any(
-                doc.page_content.strip()
-                for doc in docs
-            ):
+            if docs and any(doc.page_content.strip() for doc in docs):
                 logger.info(
                     "【PDF加载】UnstructuredPDFLoader 加载成功：%s",
                     abs_file_path.name,
@@ -304,6 +294,7 @@ async def txt_loader(
 
     return []
 
+
 async def markdown_loader(
     file_path: str | Path,
 ) -> list[Document]:
@@ -362,9 +353,7 @@ async def word_loader(
         return []
 
     try:
-        loader = Docx2txtLoader(
-            str(abs_file_path)
-        )
+        loader = Docx2txtLoader(str(abs_file_path))
 
         docs = await asyncio.to_thread(loader.load)
 
@@ -381,6 +370,7 @@ async def word_loader(
             abs_file_path,
         )
         return []
+
 
 async def ppt_loader(
     file_path: str | Path,
@@ -421,6 +411,7 @@ async def ppt_loader(
         )
         return []
 
+
 def pdf_loader_sync(
     file_path: str | Path,
     password: str | None = None,
@@ -443,26 +434,18 @@ def pdf_loader_sync(
             ).load()
 
         try:
-            docs = UnstructuredPDFLoader(
-                str(abs_file_path)
-            ).load()
+            docs = UnstructuredPDFLoader(str(abs_file_path)).load()
 
-            if docs and any(
-                doc.page_content.strip()
-                for doc in docs
-            ):
+            if docs and any(doc.page_content.strip() for doc in docs):
                 return docs
 
         except Exception as exc:
             logger.warning(
-                "【PDF加载】UnstructuredPDFLoader 失败，"
-                "退回 PyPDFLoader：%s",
+                "【PDF加载】UnstructuredPDFLoader 失败，" "退回 PyPDFLoader：%s",
                 exc,
             )
 
-        return PyPDFLoader(
-            str(abs_file_path)
-        ).load()
+        return PyPDFLoader(str(abs_file_path)).load()
 
     except Exception:
         logger.exception(
@@ -531,9 +514,7 @@ def word_loader_sync(
     abs_file_path = resolve_file_path(file_path)
 
     try:
-        return Docx2txtLoader(
-            str(abs_file_path)
-        ).load()
+        return Docx2txtLoader(str(abs_file_path)).load()
 
     except Exception:
         logger.exception(

@@ -1,15 +1,15 @@
 from collections.abc import Iterator
 
 from langchain.agents import create_agent
+from langchain_core.messages import AIMessage
 
+from app.agent.middleware import get_middleware
 from app.agent.tools import (
     get_current_time,
     search_knowledge,
 )
-from app.agent.middleware import get_middleware
 from app.model.factory import chat_model
 from app.utils.prompt_loader import load_prompt
-from langchain_core.messages import AIMessage
 
 
 class MaintAIAgent:
@@ -21,11 +21,7 @@ class MaintAIAgent:
         tools=None,
         middleware=None,
     ):
-        self.model = (
-            model
-            if model is not None
-            else chat_model
-        )
+        self.model = model if model is not None else chat_model
 
         self.tools = (
             tools
@@ -36,15 +32,9 @@ class MaintAIAgent:
             ]
         )
 
-        self.middleware = (
-            middleware
-            if middleware is not None
-            else get_middleware()
-)
+        self.middleware = middleware if middleware is not None else get_middleware()
 
-        self.system_prompt = load_prompt(
-            "main_prompt"
-        )
+        self.system_prompt = load_prompt("main_prompt")
 
         self.agent = self._create_agent()
 
@@ -92,11 +82,8 @@ class MaintAIAgent:
             )
         )
 
-        return result[
-            "messages"
-        ][-1].content
+        return result["messages"][-1].content
 
-    
     def stream(
         self,
         query: str,
@@ -111,9 +98,7 @@ class MaintAIAgent:
             ),
             stream_mode="values",
         ):
-            latest_message = chunk[
-                "messages"
-            ][-1]
+            latest_message = chunk["messages"][-1]
 
             if (
                 isinstance(
@@ -122,20 +107,13 @@ class MaintAIAgent:
                 )
                 and latest_message.content
             ):
-                yield (
-                    str(
-                        latest_message.content
-                    ).strip()
-                    + "\n"
-                )
+                yield (str(latest_message.content).strip() + "\n")
 
 
 if __name__ == "__main__":
     agent = MaintAIAgent()
 
-    for chunk in agent.stream(
-        "这个PDF是用来做什么的？"
-    ):
+    for chunk in agent.stream("这个PDF是用来做什么的？"):
         print(
             chunk,
             end="",

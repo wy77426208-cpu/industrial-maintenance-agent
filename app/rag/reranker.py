@@ -60,7 +60,7 @@ class RerankService:
         result = []
 
         for rank, (document, score) in enumerate(
-            ranked_results[:self.top_k],
+            ranked_results[: self.top_k],
             start=1,
         ):
             rerank_score = float(score)

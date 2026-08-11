@@ -12,18 +12,14 @@ from app.core.logger_handler import logger
 def log_before_agent(state, runtime):
     """记录一次 Agent 任务开始。"""
 
-    logger.info(
-        "【Agent】开始处理请求"
-    )
+    logger.info("【Agent】开始处理请求")
 
 
 @after_agent
 def log_after_agent(state, runtime):
     """记录一次 Agent 任务结束。"""
 
-    logger.info(
-        "【Agent】请求处理完成"
-    )
+    logger.info("【Agent】请求处理完成")
 
 
 @before_model

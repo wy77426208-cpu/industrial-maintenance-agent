@@ -13,17 +13,11 @@ class HybridRetrieverService:
         vector_store: VectorStoreService,
     ):
         self.vector_store = vector_store
-        self.vector_retriever = (
-            vector_store.get_retriever()
-        )
+        self.vector_retriever = vector_store.get_retriever()
 
-        documents = (
-            vector_store.get_all_documents()
-        )
+        documents = vector_store.get_all_documents()
 
-        self.bm25 = BM25Service(
-            documents
-        )
+        self.bm25 = BM25Service(documents)
 
     def retrieve(
         self,
@@ -31,15 +25,9 @@ class HybridRetrieverService:
     ) -> list[Document]:
         """执行 Vector 与 BM25 混合检索。"""
 
-        vector_docs = (
-            self.vector_retriever.invoke(
-                query
-            )
-        )
+        vector_docs = self.vector_retriever.invoke(query)
 
-        bm25_docs = self.bm25.retrieve(
-            query
-        )
+        bm25_docs = self.bm25.retrieve(query)
 
         documents = self._merge_documents(
             vector_docs,
@@ -65,9 +53,7 @@ class HybridRetrieverService:
         documents = []
         seen = set()
 
-        for document in (
-            vector_docs + bm25_docs
-        ):
+        for document in vector_docs + bm25_docs:
             metadata = document.metadata or {}
 
             key = (

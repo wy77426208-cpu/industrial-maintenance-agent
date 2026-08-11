@@ -14,9 +14,7 @@ def load_prompt(prompt_type: str = "main_prompt") -> str:
             prompt_type,
         )
 
-        raise KeyError(
-            f"配置中不存在 Prompt 类型：{prompt_type}"
-        )
+        raise KeyError(f"配置中不存在 Prompt 类型：{prompt_type}")
 
     relative_path = PROMPT_CONFIG[prompt_type]
 
@@ -24,9 +22,7 @@ def load_prompt(prompt_type: str = "main_prompt") -> str:
     prompt_path = (PROJECT_ROOT / relative_path).resolve()
 
     try:
-        prompt_text = prompt_path.read_text(
-            encoding="utf-8"
-        )
+        prompt_text = prompt_path.read_text(encoding="utf-8")
 
         logger.debug(
             "【Prompt加载】加载成功：%s -> %s",
@@ -45,5 +41,3 @@ def load_prompt(prompt_type: str = "main_prompt") -> str:
         )
 
         raise
-
-

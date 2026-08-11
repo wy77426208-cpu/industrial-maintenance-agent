@@ -41,27 +41,17 @@ def search_knowledge(
 def get_current_time() -> str:
     """获取当前系统时间。"""
 
-    return datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 if __name__ == "__main__":
-    print(
-        "\n========== 知识库 Tool =========="
-    )
+    print("\n========== 知识库 Tool ==========")
 
-    result = search_knowledge.invoke(
-        {
-            "query": "这个PDF是用来做什么的？"
-        }
-    )
+    result = search_knowledge.invoke({"query": "这个PDF是用来做什么的？"})
 
     print(result)
 
-    print(
-        "\n========== 时间 Tool =========="
-    )
+    print("\n========== 时间 Tool ==========")
 
     time_result = get_current_time.invoke({})
 
