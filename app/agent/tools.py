@@ -14,11 +14,12 @@ def get_rag_service() -> RagService:
 
 @tool(
     description=(
-        "查询 MaintAI 本地知识库中的文档内容。"
+        "查询 MaintAI 本地知识库中的原始文档资料。"
         "可用于查询已上传的 PDF、TXT、Word、Markdown、PPT 等文档，"
-        "包括设备手册、故障说明、维护方法、操作规范等资料。"
-        "当用户询问知识库、已上传文档、PDF、手册或文档中的具体内容时，"
-        "应使用此工具获取可靠依据。"
+        "包括设备手册、故障说明、维护方法和操作规范。"
+        "工具会返回与问题最相关的原始文档片段及文件名、页码、切片信息。"
+        "当用户询问设备参数、故障代码、维修方法、操作步骤、"
+        "安全要求或知识库文档中的具体内容时，应优先调用此工具。"
     )
 )
 def search_knowledge(
@@ -28,7 +29,7 @@ def search_knowledge(
 
     rag_service = get_rag_service()
 
-    return rag_service.answer(query)
+    return rag_service.search(query)
 
 
 @tool(

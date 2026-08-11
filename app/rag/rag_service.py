@@ -8,42 +8,42 @@ from app.core.logger_handler import logger
 from app.model.factory import chat_model
 from app.rag.vector_store import VectorStoreService
 from app.utils.prompt_loader import load_prompt
+from app.rag.reranker import RerankService
 
 
 def log_prompt(prompt):
-    """记录最终发送给模型的 Prompt。"""
-
+    """记录 RAG Prompt。"""
     logger.debug(
         "【RAG Prompt】\n%s",
         prompt.to_string(),
     )
-
     return prompt
 
 
 class RagService:
-    """RAG 检索问答服务。"""
+    """RAG 检索与问答服务。"""
 
     def __init__(self):
         self.vector_store = VectorStoreService()
-        self.retriever = self.vector_store.get_retriever()
+        self.retriever = (
+            self.vector_store.get_retriever()
+        )
+        self.reranker = RerankService()
 
+        # 旧版 RAG 问答流程继续保留，用于后续对比测试
         self.prompt_text = load_prompt(
             "rag_summary_prompt"
         )
-
         self.prompt_template = (
             PromptTemplate.from_template(
                 self.prompt_text
             )
         )
-
         self.model = chat_model
         self.chain = self._init_chain()
 
     def _init_chain(self):
-        """创建 RAG 生成链。"""
-
+        """初始化旧版 RAG 总结链。"""
         return (
             self.prompt_template
             | log_prompt
@@ -55,18 +55,63 @@ class RagService:
         self,
         query: str,
     ) -> list[Document]:
-        """根据问题检索相关文档。"""
+        """检索并重排相关文档切片。"""
 
-        return self.retriever.invoke(query)
+        candidates = self.retriever.invoke(
+            query
+        )
+
+        logger.info(
+            "【RAG】候选检索完成，query=%s，返回 %d 个切片",
+            query,
+            len(candidates),
+        )
+
+        docs = self.reranker.rerank(
+            query,
+            candidates,
+        )
+
+        logger.info(
+            "【RAG】重排完成，保留 %d 个切片",
+            len(docs),
+        )
+
+        return docs
 
     @staticmethod
+    def _get_filename(
+        metadata: dict,
+    ) -> str:
+        """从 metadata 中获取文件名。"""
+
+        filename = metadata.get(
+            "filename"
+        )
+
+        if filename:
+            return str(filename)
+
+        source = metadata.get("source")
+
+        if source:
+            return Path(
+                str(source)
+            ).name
+
+        return "未知来源"
+
+    @classmethod
     def format_context(
+        cls,
         docs: list[Document],
     ) -> str:
-        """将检索结果整理为 Prompt 上下文。"""
+        """将检索结果整理为 Agent 可读取的证据文本。"""
 
         if not docs:
-            return "未检索到相关参考资料。"
+            return (
+                "未检索到相关参考资料。"
+            )
 
         context_parts = []
 
@@ -76,22 +121,13 @@ class RagService:
         ):
             metadata = doc.metadata or {}
 
-            filename = metadata.get("filename")
-
-            if not filename:
-                source = metadata.get("source")
-
-                if source:
-                    filename = Path(
-                        str(source)
-                    ).name
-
-            filename = filename or "未知来源"
+            filename = cls._get_filename(
+                metadata
+            )
 
             page_label = metadata.get(
                 "page_label"
             )
-
             chunk_index = metadata.get(
                 "chunk_index"
             )
@@ -116,13 +152,42 @@ class RagService:
                 f"{doc.page_content.strip()}"
             )
 
-        return "\n\n".join(context_parts)
+        return "\n\n".join(
+            context_parts
+        )
+
+    def search(
+        self,
+        query: str,
+    ) -> str:
+        """
+        纯检索知识库。
+
+        不调用 LLM，只返回真实检索到的文档内容与来源。
+        """
+
+        docs = self.retrieve_docs(query)
+
+        context = self.format_context(
+            docs
+        )
+
+        logger.debug(
+            "【RAG】原始检索上下文：\n%s",
+            context,
+        )
+
+        return context
 
     def answer(
         self,
         query: str,
     ) -> str:
-        """检索知识库并生成回答。"""
+        """
+        旧版 RAG 问答。
+
+        保留用于后续与纯检索方案进行效果对比。
+        """
 
         docs = self.retrieve_docs(query)
 
@@ -136,15 +201,3 @@ class RagService:
                 "context": context,
             }
         )
-
-
-if __name__ == "__main__":
-    rag = RagService()
-
-    result = rag.answer(
-        "这个PDF是用来做什么的？"
-    )
-
-    print("\n========== RAG 回答 ==========")
-    print(result)
-

@@ -1,8 +1,20 @@
 collection_name: agent
 
-k: 5
+# 检索配置
+candidate_k: 20
+rerank_k: 5
 
+# Rerank 模型
+rerank_model: BAAI/bge-reranker-v2-m3
+
+# 文档切片
 chunk_size: 500
 chunk_overlap: 50
 
-allowed_file_types: [".pdf", ".txt", ".md", ".docx", ".ppt", ".pptx"]
+allowed_file_types:
+  - ".pdf"
+  - ".txt"
+  - ".md"
+  - ".docx"
+  - ".ppt"
+  - ".pptx"

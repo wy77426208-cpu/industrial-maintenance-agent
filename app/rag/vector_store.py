@@ -47,7 +47,7 @@ class VectorStoreService:
         """获取基础向量检索器。"""
         return self.vector_store.as_retriever(
             search_kwargs={
-                "k": CHROMA_CONFIG["k"]
+                "k": CHROMA_CONFIG["candidate_k"]
             }
         )
 
