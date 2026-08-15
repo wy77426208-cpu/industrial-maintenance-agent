@@ -1,7 +1,12 @@
 import os
+from collections.abc import AsyncGenerator
 
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.path_tool import ENV_FILE
@@ -26,6 +31,15 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """为一次请求提供数据库Session。"""
+
+    async with AsyncSessionLocal() as db:
+        try:
+            yield db
+        except Exception:
+            await db.rollback()
+            raise
 
 async def init_db():
     """初始化数据库表。"""
