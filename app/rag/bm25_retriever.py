@@ -38,9 +38,8 @@ class BM25Service:
         retriever = BM25Retriever.from_documents(
             self.documents,
             preprocess_func=tokenize_text,
+            k=self.top_k,
         )
-
-        retriever.k = self.top_k
 
         logger.info(
             "【BM25】索引创建完成，共 %d 个切片",
