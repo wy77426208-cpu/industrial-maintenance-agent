@@ -70,7 +70,7 @@ class KnowledgeService:
                 target_path.name,
             )
 
-        # 将 Streamlit 上传的二进制内容保存到本地
+        # 将上传文件的二进制内容保存到本地
         try:
             await asyncio.to_thread(
                 target_path.write_bytes,

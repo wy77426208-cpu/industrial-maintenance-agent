@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_db
 from app.routers.chat import chat_router
+from app.routers.knowledge import knowledge_router
 
 
 app = FastAPI(
@@ -14,6 +15,7 @@ app = FastAPI(
 
 # 注册聊天子路由
 app.include_router(chat_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/health")
