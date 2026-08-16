@@ -7,12 +7,15 @@ from app.schemas.chat import (
     ChatMessageResponse,
     ChatSessionCreate,
     ChatSessionResponse,
+    ChatSessionUpdate,
 )
 from app.services.chat_service import (
     add_message,
     create_chat_session,
+    delete_chat_session,
     get_messages,
     get_user_sessions,
+    update_chat_title,
 )
 
 
@@ -118,3 +121,53 @@ async def list_messages(
         ChatMessageResponse.model_validate(message)
         for message in messages
     ]
+
+@chat_router.patch(
+    "/sessions/{session_id}",
+    response_model=ChatSessionResponse,
+)
+async def update_session_title(
+    session_id: int,
+    request: ChatSessionUpdate,
+    user_id: int = Query(gt=0),
+    db: AsyncSession = Depends(get_db),
+) -> ChatSessionResponse:
+    """修改聊天会话标题。"""
+
+    try:
+        chat_session = await update_chat_title(
+            db=db,
+            session_id=session_id,
+            user_id=user_id,
+            title=request.title,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    return ChatSessionResponse.model_validate(chat_session)
+
+@chat_router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_session(
+    session_id: int,
+    user_id: int = Query(gt=0),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """删除指定聊天会话。"""
+
+    deleted = await delete_chat_session(
+        db=db,
+        session_id=session_id,
+        user_id=user_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="聊天会话不存在",
+        )
