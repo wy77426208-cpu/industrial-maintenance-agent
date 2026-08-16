@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_db
 from app.schemas.chat import (
+    ChatMessageCreate,
+    ChatMessageResponse,
     ChatSessionCreate,
     ChatSessionResponse,
 )
 from app.services.chat_service import (
+    add_message,
     create_chat_session,
+    get_messages,
     get_user_sessions,
 )
 
@@ -57,4 +61,60 @@ async def list_sessions(
     return [
         ChatSessionResponse.model_validate(session)
         for session in sessions
+    ]
+
+@chat_router.post(
+    "/sessions/{session_id}/messages",
+    response_model=ChatMessageResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_message(
+    session_id: int,
+    request: ChatMessageCreate,
+    db: AsyncSession = Depends(get_db),
+) -> ChatMessageResponse:
+    """向指定聊天会话添加用户消息。"""
+
+    try:
+        message = await add_message(
+            db=db,
+            session_id=session_id,
+            user_id=request.user_id,
+            role="user",
+            content=request.content,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    return ChatMessageResponse.model_validate(message)
+
+@chat_router.get(
+    "/sessions/{session_id}/messages",
+    response_model=list[ChatMessageResponse],
+)
+async def list_messages(
+    session_id: int,
+    user_id: int = Query(gt=0),
+    db: AsyncSession = Depends(get_db),
+) -> list[ChatMessageResponse]:
+    """查询指定聊天会话的全部消息。"""
+
+    try:
+        messages = await get_messages(
+            db=db,
+            session_id=session_id,
+            user_id=user_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    return [
+        ChatMessageResponse.model_validate(message)
+        for message in messages
     ]
