@@ -14,6 +14,74 @@ class KnowledgeService:
     def __init__(self):
         self.vector_store = VectorStoreService()
 
+    def list_files(self) -> list[dict]:
+        """获取知识库文件列表。"""
+
+        records = self.vector_store.md5_store.list_records()
+
+        return [
+            {
+                "file_id": record["file_id"],
+                "filename": record["filename"],
+                "created_at": record["created_at"],
+            }
+            for record in records
+        ]
+
+    async def delete_file(
+        self,
+        file_id: str,
+    ) -> dict | None:
+        """删除知识库文件及其向量切片和MD5记录。"""
+
+        # 1. 根据 file_id 查询文件记录
+        record = self.vector_store.md5_store.get_record(file_id)
+
+        if record is None:
+            return None
+
+        # 2. 删除 Chroma 中属于该文件的全部切片
+        deleted_chunk_count = (
+            await self.vector_store.delete_file_chunks(file_id)
+        )
+
+        # 3. 只允许删除 storage/uploads 目录中的原文件
+        source_deleted = False
+        source = record.get("source")
+
+        if source:
+            source_path = Path(source).resolve()
+            upload_dir = UPLOAD_DIR.resolve()
+
+            if (
+                source_path.is_relative_to(upload_dir)
+                and source_path.is_file()
+            ):
+                await asyncio.to_thread(source_path.unlink)
+                source_deleted = True
+
+        # 4. 删除 MD5 文件记录
+        record_deleted = (
+            self.vector_store.md5_store.delete_record(file_id)
+        )
+
+        if not record_deleted:
+            raise RuntimeError("删除知识库文件记录失败")
+
+        logger.info(
+            "【Knowledge】删除文件成功：%s，切片数=%d，原文件删除=%s",
+            record["filename"],
+            deleted_chunk_count,
+            source_deleted,
+        )
+
+        return {
+            "file_id": file_id,
+            "filename": record["filename"],
+            "deleted_chunk_count": deleted_chunk_count,
+            "source_deleted": source_deleted,
+        }
+
     async def upload_file(
         self,
         filename: str,

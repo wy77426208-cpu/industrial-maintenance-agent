@@ -43,6 +43,68 @@ class MD5Store:
         records = self._load()
         return md5_hex in records
 
+    def get_record(self, md5_hex: str) -> dict | None:
+        """根据文件MD5获取入库记录。"""
+
+        records = self._load()
+        record = records.get(md5_hex)
+
+        if record is None:
+            return None
+
+        return {
+            **record,
+            "file_id": md5_hex,
+        }
+
+    def list_records(self) -> list[dict]:
+        """获取全部已入库文件记录。"""
+
+        records = self._load()
+
+        result = [
+            {
+                **record,
+                "file_id": md5_hex,
+            }
+            for md5_hex, record in records.items()
+        ]
+
+        return sorted(
+            result,
+            key=lambda item: item.get("created_at", ""),
+            reverse=True,
+        )
+
+    def delete_record(self, md5_hex: str) -> bool:
+        """删除指定文件的MD5记录。"""
+
+        records = self._load()
+
+        if md5_hex not in records:
+            return False
+
+        del records[md5_hex]
+
+        try:
+            self.store_path.write_text(
+                json.dumps(
+                    records,
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+        except Exception:
+            logger.exception(
+                "【MD5记录】删除失败：%s",
+                md5_hex,
+            )
+            raise
+
+        return True
+
     def save(
         self,
         md5_hex: str,

@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from langchain_chroma import Chroma
@@ -49,6 +50,36 @@ class VectorStoreService:
     ) -> int:
         """将单个文件加入知识库。"""
         return await self.document_processor.process_file(file_path)
+
+    async def delete_file_chunks(
+        self,
+        file_md5: str,
+    ) -> int:
+        """根据文件MD5删除向量库中的全部切片。"""
+
+        result = await asyncio.to_thread(
+            self.vector_store.get,
+            where={"file_md5": file_md5},
+            include=[],
+        )
+
+        chunk_ids = result.get("ids") or []
+
+        if not chunk_ids:
+            return 0
+
+        await asyncio.to_thread(
+            self.vector_store.delete,
+            ids=chunk_ids,
+        )
+
+        logger.info(
+            "【VectorStore】已删除文件切片：file_md5=%s，数量=%d",
+            file_md5,
+            len(chunk_ids),
+        )
+
+        return len(chunk_ids)
 
     async def load_directory(
         self,
