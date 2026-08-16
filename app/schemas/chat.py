@@ -52,3 +52,9 @@ class ChatMessageResponse(BaseModel):
     role: str
     content: str
     created_at: datetime
+
+class ChatTurnResponse(BaseModel):
+    """一次完整问答的响应模型。"""
+
+    user_message: ChatMessageResponse
+    assistant_message: ChatMessageResponse

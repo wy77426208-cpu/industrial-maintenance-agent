@@ -8,7 +8,9 @@ from app.schemas.chat import (
     ChatSessionCreate,
     ChatSessionResponse,
     ChatSessionUpdate,
+    ChatTurnResponse,
 )
+from app.services.assistant_service import chat_with_agent
 from app.services.chat_service import (
     add_message,
     create_chat_session,
@@ -171,3 +173,36 @@ async def delete_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="聊天会话不存在",
         )
+
+@chat_router.post(
+    "/sessions/{session_id}/chat",
+    response_model=ChatTurnResponse,
+)
+async def chat(
+    session_id: int,
+    request: ChatMessageCreate,
+    db: AsyncSession = Depends(get_db),
+) -> ChatTurnResponse:
+    """向Agent提问并保存完整问答。"""
+
+    try:
+        user_message, assistant_message = await chat_with_agent(
+            db=db,
+            session_id=session_id,
+            user_id=request.user_id,
+            content=request.content,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    return ChatTurnResponse(
+        user_message=ChatMessageResponse.model_validate(
+            user_message
+        ),
+        assistant_message=ChatMessageResponse.model_validate(
+            assistant_message
+        ),
+    )    
