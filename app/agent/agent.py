@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Iterator
 
 from langchain.agents import create_agent
@@ -84,6 +85,19 @@ class MaintAIAgent:
 
         return result["messages"][-1].content
 
+    async def ainvoke(
+        self,
+        query: str,
+        history: list[dict] | None = None,
+    ) -> str:
+        """在线程中执行同步 Agent，避免阻塞异步接口。"""
+
+        return await asyncio.to_thread(
+            self.invoke,
+            query,
+            history,
+        )
+    
     def stream(
         self,
         query: str,
